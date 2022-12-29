@@ -1,0 +1,37 @@
+[package]
+name = "betar_me"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+sqlx = { version = "0.5.5", features = ["runtime-tokio-rustls", "postgres", "uuid"] }
+error-stack = "0.1.1"
+mockall = "0.11.2"
+async-trait = "0.1.57"
+tracing = "0.1.36"
+tracing-appender = "0.2.2"
+tracing-core = "0.1.29"
+tracing-subscriber = "0.3.15"
+tracing-futures = "0.2.5"
+tracing-bunyan-formatter = "0.3.3"
+uuid = "1.1.2"
+tower = "0.4.13"
+thiserror = "1.0.35"
+validator = "0.16.0"
+anyhow = "1.0.65"
+reqwest = "0.11.12"
+
+[dependencies.tower-http]
+version = "0.3.0"
+features = ["trace", "request-id"]
+
+[dependencies.axum]
+version = "0.5.16"
+
+[dependencies.tokio]
+version = "1.21.1"
+features = ["rt-multi-thread", "macros"]
+
+
