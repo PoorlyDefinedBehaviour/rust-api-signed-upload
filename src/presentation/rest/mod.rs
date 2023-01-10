@@ -1,12 +1,13 @@
 mod controllers;
 mod middlewares;
-use std::sync::Arc;
 
+use std::sync::Arc;
 use anyhow::Result;
-use axum::{http::header::HeaderName, routing::get, Extension, Router};
+use axum::{http::header::HeaderName, routing::{get, post}, Extension, Router};
 use controllers::health_check;
 use tower::ServiceBuilder;
 use tower_http::request_id::PropagateRequestIdLayer;
+use controllers::user;
 
 use crate::{
   config::Config,
@@ -17,10 +18,11 @@ use crate::{
 pub fn router() -> Router {
   Router::new()
     .route("/v1/health-check", get(health_check::handle))
+    .route("/v1/register", post(user::register))
     .route_layer(ServiceBuilder::new().layer(PropagateRequestIdLayer::new(
       HeaderName::from_static(X_REQUEST_ID_HEADER_NAME),
     )))
-    .layer(Extension(Arc::new(deps())))
+    .layer(Extension(Arc::new(deps().unwrap())))
 }
 
 fn deps() -> Result<Deps> {

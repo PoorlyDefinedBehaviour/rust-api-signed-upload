@@ -27,9 +27,11 @@ impl contracts::repository::UserRepository for UserRepository {
     executor: &mut Executor<'c, Writable>,
     input: commands::user::create::CreateUserInput,
   ) -> Result<()> {
-    sqlx::query("insert into users(name, email) values ($1, $2")
-      .bind(input.name)
+    sqlx::query("insert into users(username, email, password, accepted_terms_at) values ($1, $2, $3, $4")
+      .bind(input.username)
       .bind(input.email.expose())
+      .bind(input.password.expose() as i64)
+      .bind(input.accepted_terms_at.to_rfc3339())
       .execute_ex(executor)
       .await?;
     Ok(())
