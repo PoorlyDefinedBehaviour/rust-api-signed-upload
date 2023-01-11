@@ -7,9 +7,9 @@ use crate::domain::{
 };
 use anyhow::Result;
 use async_trait::async_trait;
-
 use uuid::Uuid;
 
+#[derive(Debug)]
 pub struct UserRepository;
 
 #[async_trait]
@@ -30,7 +30,7 @@ impl contracts::repository::UserRepository for UserRepository {
     sqlx::query("insert into users(username, email, password, accepted_terms_at) values ($1, $2, $3, $4")
       .bind(input.username)
       .bind(input.email.expose())
-      .bind(input.password.expose() as i64)
+      .bind(input.password.expose())
       .bind(input.accepted_terms_at.to_rfc3339())
       .execute_ex(executor)
       .await?;

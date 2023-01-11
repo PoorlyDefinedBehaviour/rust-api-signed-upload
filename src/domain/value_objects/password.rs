@@ -10,7 +10,7 @@ pub struct Password(String);
 
 impl Password {
     pub fn expose(&self) -> String {
-        self.0
+        self.0.to_owned()
     }
 }
 

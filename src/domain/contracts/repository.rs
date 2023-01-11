@@ -3,6 +3,7 @@ use async_trait::async_trait;
 use sqlx::postgres::{PgQueryResult, PgRow};
 use sqlx::query::Query;
 use sqlx::{Executor as SqlxExecutor, Pool, Postgres, Transaction};
+use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::sync::Arc;
 use uuid::Uuid;
@@ -107,19 +108,19 @@ where
 }
 
 #[async_trait]
-
-pub trait Database: Send + Sync {
+pub trait Database: Send + Sync + Debug {
   async fn read<'c>(&self) -> Result<Executor<'c, Readable>>;
   async fn write<'c>(&self) -> Result<Executor<'c, Writable>>;
 }
 
+#[derive(Debug)]
 pub struct Repository {
   pub users: Arc<dyn UserRepository>,
 }
 
 #[cfg_attr(test, mockall::automock)]
 #[async_trait]
-pub trait UserRepository: Send + Sync {
+pub trait UserRepository: Send + Sync + Debug {
   async fn get_by_id<'c>(&self, executor: &mut Executor<'c, Readable>, id: Uuid);
 
   async fn create<'c>(

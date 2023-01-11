@@ -12,6 +12,7 @@ use tokio::sync::RwLock;
 
 pub mod users;
 
+#[derive(Debug)]
 pub struct Config {
   database_ro_url: Option<String>,
   database_rw_url: Option<String>,
@@ -28,6 +29,7 @@ impl From<&config::Config> for Config {
   }
 }
 
+#[derive(Debug)]
 pub struct Database {
   config: Config,
   ro_pool: RwLock<Option<Pool<Postgres>>>,
