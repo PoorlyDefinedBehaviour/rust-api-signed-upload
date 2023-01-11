@@ -137,6 +137,7 @@ dependencies = [
  "axum",
  "bcrypt",
  "chrono",
+ "dotenv",
  "error-stack",
  "mockall",
  "reqwest",

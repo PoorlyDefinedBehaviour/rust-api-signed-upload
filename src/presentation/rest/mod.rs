@@ -18,7 +18,7 @@ use crate::{
 pub fn router() -> Router {
   Router::new()
     .route("/v1/health-check", get(health_check::handle))
-    .route("/v1/register", post(user::register))
+    .route("/v1/users", post(user::register))
     .route_layer(ServiceBuilder::new().layer(PropagateRequestIdLayer::new(
       HeaderName::from_static(X_REQUEST_ID_HEADER_NAME),
     )))

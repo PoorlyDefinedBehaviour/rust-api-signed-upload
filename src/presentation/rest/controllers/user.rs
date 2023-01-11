@@ -1,4 +1,4 @@
-use anyhow::{Result, bail, anyhow, Context};
+use anyhow::{Result, bail, Context};
 use axum::{Json, Extension, response::IntoResponse};
 use reqwest::StatusCode;
 use std::sync::Arc;
@@ -64,35 +64,24 @@ fn into_input(payload: serde_json::Value) -> Result<CreateUserInput> {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
-
-    use async_trait::async_trait;
     use axum::{http::Request, body::Body};
     use reqwest::StatusCode;
     use serde_json::json;
     use tower::ServiceExt;
 
-    use crate::infra::uuid::Uuid;
-    use crate::domain::{
-        contracts::repository::{Repository, UserRepository, Executor, Readable, Writable},
-        commands::user::create::CreateUserInput
-    };
     use crate::presentation::rest::{router, deps};
 
     #[tokio::test]
     async fn register() -> Result<(), Box<dyn std::error::Error>> {
+        dotenv::dotenv().ok();
+
         let app = router();
-
-        let mut deps = deps()?;
-
-        deps.repos = Repository {
-            users: Arc::new(URepository)
-        };
 
         let req = Request::builder()
             .method("POST")
             .uri("/v1/users")
-            .extension(deps)
+            .header("Content-Type", "application/json")
+            .extension(deps()?)
             .body(Body::from(json!({
                 "username": "zezinho_handjobber",
                 "email": "jose.almeida@punhetinha.com.br",
@@ -107,23 +96,4 @@ mod tests {
 
         Ok(())
     }
-
-    #[derive(Debug)]
-    struct URepository;
-
-    #[async_trait]
-    impl UserRepository for URepository {
-        async fn create<'c>(
-            &self,
-            _executor: &mut Executor<'c, Writable>,
-            _input: CreateUserInput
-        ) -> anyhow::Result<()> {
-            Ok(())
-        }
-
-        async fn get_by_id<'c>(&self, _executor: &mut Executor<'c, Readable>, _id: Uuid) {
-            panic!("this method shouldn't not be called")
-        }
-    }
-
 }

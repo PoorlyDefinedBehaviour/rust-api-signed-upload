@@ -1,3 +1,4 @@
+use crate::infra::uuid::Uuid;
 use crate::domain::{
   commands,
   contracts::{
@@ -7,7 +8,6 @@ use crate::domain::{
 };
 use anyhow::Result;
 use async_trait::async_trait;
-use uuid::Uuid;
 
 #[derive(Debug)]
 pub struct UserRepository;

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::{
   config,
   domain::contracts::{
@@ -9,6 +11,8 @@ use anyhow::{Context, Result};
 use async_trait::async_trait;
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use tokio::sync::RwLock;
+
+use self::users::UserRepository;
 
 pub mod users;
 
@@ -82,8 +86,7 @@ impl Database {
         let new_pool = PgPoolOptions::new()
           .max_connections(self.config.max_connections)
           .connect(url)
-          .await
-          .context("failed to connect to database_rw_url")?;
+          .await?;
 
         *pool = Some(new_pool.clone());
         Ok(new_pool)
@@ -105,5 +108,7 @@ impl contracts::repository::Database for Database {
 }
 
 pub fn new() -> contracts::repository::Repository {
-  todo!()
+    contracts::repository::Repository {
+        users: Arc::new(UserRepository)
+    }
 }

@@ -6,9 +6,9 @@ use sqlx::{Executor as SqlxExecutor, Pool, Postgres, Transaction};
 use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::sync::Arc;
-use uuid::Uuid;
 
 use crate::domain::commands;
+use crate::infra::uuid::Uuid;
 
 pub struct Executor<'c, S> {
   inner: ExecutorInner<'c>,
