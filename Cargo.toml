@@ -23,6 +23,10 @@ reqwest = "0.11.12"
 chrono = "0.4.23"
 bcrypt = "0.13.0"
 dotenv = "0.15.0"
+hyper = "0.14.23"
+fake = "2.5"
+rand = "0.8"
+serde = { version = "1.0.152", features = ["derive"] }
 
 [dependencies.sqlx]
 version = "0.5.5"

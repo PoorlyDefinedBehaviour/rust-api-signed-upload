@@ -1,5 +1,7 @@
 mod controllers;
 mod middlewares;
+mod extensions;
+pub mod view_models;
 
 use std::sync::Arc;
 use anyhow::Result;
