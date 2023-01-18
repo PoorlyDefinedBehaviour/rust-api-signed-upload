@@ -5,8 +5,10 @@ use fake::{Faker, Dummy, Fake};
 use hyper::StatusCode;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+use tracing::error;
 use std::sync::Arc;
 use chrono::Utc;
+
 use crate::domain::contracts::deps::Deps;
 use crate::domain::commands::user::create::CreateUserInput;
 use crate::domain::errors::ValidationError;
@@ -14,7 +16,6 @@ use crate::domain::{self, commands};
 use crate::domain::value_objects::{email::Email, password::Password};
 use crate::presentation::rest::extensions::context::ExtractContext;
 use crate::presentation::rest::view_models::register::ValidationErrorViewModel;
-use tracing::error;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct RegisterViewModel {

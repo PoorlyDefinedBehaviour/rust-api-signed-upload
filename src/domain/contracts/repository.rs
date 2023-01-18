@@ -8,6 +8,8 @@ use std::marker::PhantomData;
 use std::sync::Arc;
 
 use crate::domain::commands;
+use crate::domain::queries::timeline::get_timeline::Post;
+use crate::domain::value_objects::cursor::Cursor;
 use crate::infra::uuid::Uuid;
 
 pub struct Executor<'c, S> {
@@ -63,14 +65,21 @@ pub enum ExecutorInner<'c> {
 #[async_trait]
 pub trait SqlxExt<S> {
   async fn fetch_one_ex<'e>(self, executor: &mut Executor<'e, S>) -> Result<PgRow, sqlx::Error>;
+
   async fn fetch_optional_ex<'e>(
     self,
     executor: &mut Executor<'e, S>,
   ) -> Result<Option<PgRow>, sqlx::Error>;
+
   async fn execute_ex<'e>(
     self,
     executor: &mut Executor<'e, S>,
   ) -> Result<PgQueryResult, sqlx::Error>;
+
+  async fn fetch_all_ex<'e>(
+    self,
+    executor: &mut Executor<'e, S>,
+  ) -> Result<Vec<PgRow>, sqlx::Error>;
 }
 
 #[async_trait]
@@ -105,6 +114,16 @@ where
       ExecutorInner::Transaction(tx) => tx.execute(self).await,
     }
   }
+
+  async fn fetch_all_ex<'e>(
+    self,
+    executor: &mut Executor<'e, S>,
+  ) -> Result<Vec<PgRow>, sqlx::Error> {
+    match &mut executor.inner {
+      ExecutorInner::Pool(pool) => pool.fetch_all(self).await,
+      ExecutorInner::Transaction(tx) => tx.fetch_all(self).await,
+    }
+  }
 }
 
 #[async_trait]
@@ -116,6 +135,7 @@ pub trait Database: Send + Sync + Debug {
 #[derive(Debug)]
 pub struct Repository {
   pub users: Arc<dyn UserRepository>,
+  pub timeline: Arc<dyn TimelineRepository>,
 }
 
 #[cfg_attr(test, mockall::automock)]
@@ -128,4 +148,9 @@ pub trait UserRepository: Send + Sync + Debug {
     executor: &mut Executor<'c, Writable>,
     input: commands::user::create::CreateUserInput,
   ) -> Result<()>;
+}
+
+#[async_trait]
+pub trait TimelineRepository: Send + Sync + Debug {
+    async fn get_timeline<'c>(&self, executor: &mut Executor<'c, Readable>, cursor: Cursor) -> Result<Vec<Post>>;
 }

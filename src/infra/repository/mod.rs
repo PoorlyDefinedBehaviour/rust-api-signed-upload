@@ -1,3 +1,6 @@
+pub mod users;
+pub mod timeline;
+
 use std::sync::Arc;
 
 use crate::{
@@ -13,8 +16,6 @@ use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use tokio::sync::RwLock;
 
 use self::users::UserRepository;
-
-pub mod users;
 
 #[derive(Debug)]
 pub struct Config {

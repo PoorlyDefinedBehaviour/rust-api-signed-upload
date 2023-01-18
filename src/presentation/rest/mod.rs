@@ -10,6 +10,7 @@ use controllers::health_check;
 use tower::ServiceBuilder;
 use tower_http::request_id::PropagateRequestIdLayer;
 use controllers::user;
+use controllers::timeline;
 
 use crate::{
   config::Config,
@@ -21,6 +22,7 @@ pub fn router() -> Router {
   Router::new()
     .route("/v1/health-check", get(health_check::handle))
     .route("/v1/users", post(user::register))
+    .route("/v1/timeline", post(timeline::get_timeline))
     .route_layer(ServiceBuilder::new().layer(PropagateRequestIdLayer::new(
       HeaderName::from_static(X_REQUEST_ID_HEADER_NAME),
     )))
