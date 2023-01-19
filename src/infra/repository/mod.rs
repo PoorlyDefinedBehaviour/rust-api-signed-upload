@@ -15,7 +15,7 @@ use async_trait::async_trait;
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use tokio::sync::RwLock;
 
-use self::users::UserRepository;
+use self::{users::UserRepository, timeline::TimelineRepository};
 
 #[derive(Debug)]
 pub struct Config {
@@ -110,6 +110,7 @@ impl contracts::repository::Database for Database {
 
 pub fn new() -> contracts::repository::Repository {
     contracts::repository::Repository {
-        users: Arc::new(UserRepository)
+        users: Arc::new(UserRepository),
+        timeline: Arc::new(TimelineRepository)
     }
 }

@@ -1,4 +1,5 @@
+#[derive(Debug)]
 pub struct Cursor {
-    pub offset: i128,
-    pub limit: i8
+    pub offset: i64,
+    pub limit: i64
 }
