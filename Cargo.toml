@@ -29,6 +29,7 @@ serde = { version = "1.0.152", features = ["derive"] }
 axum-macros = "0.3.1"
 sqlx = { version = "0.6.2", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono"] }
 uuid = { version = "1.2.2", features = ["serde", "v4"] }
+qrcode = "0.12.0"
 
 [dependencies.tower-http]
 version = "0.3.0"
