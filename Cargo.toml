@@ -19,7 +19,7 @@ thiserror = "1.0.35"
 validator = "0.16.0"
 anyhow = "1.0.65"
 reqwest = "0.11.12"
-chrono = "0.4.23"
+chrono = { version = "0.4.23", features = ["serde"] }
 bcrypt = "0.13.0"
 dotenv = "0.15.0"
 hyper = "0.14.23"
@@ -27,7 +27,7 @@ fake = "2.5"
 rand = "0.8"
 serde = { version = "1.0.152", features = ["derive"] }
 axum-macros = "0.3.1"
-sqlx = { version = "0.6.2", features = ["runtime-tokio-rustls", "postgres", "uuid"] }
+sqlx = { version = "0.6.2", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono"] }
 uuid = { version = "1.2.2", features = ["serde", "v4"] }
 
 [dependencies.tower-http]
