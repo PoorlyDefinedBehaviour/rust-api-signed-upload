@@ -14,7 +14,7 @@ use crate::domain::{
 };
 
 #[derive(Debug, Deserialize)]
-pub struct GetTimelineViewModel {
+pub struct GetTimelineQuery {
     cursor: i64,
 }
 
@@ -23,7 +23,7 @@ pub struct GetTimelineViewModel {
     ctx = ?ctx
 ))]
 pub async fn get_timeline(
-    Query(payload): Query<GetTimelineViewModel>,
+    Query(payload): Query<GetTimelineQuery>,
     Extension(deps): Extension<Arc<Deps>>,
     ExtractContext(ctx): ExtractContext,
 ) -> Result<Json<Vec<Post>>, axum::response::Response> {
