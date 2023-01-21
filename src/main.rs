@@ -11,6 +11,8 @@ use tracing_subscriber::Registry;
 
 #[tokio::main]
 async fn main() {
+  dotenv::dotenv().ok();
+
   let (non_blocking_writer, _guard) = tracing_appender::non_blocking(std::io::stdout());
 
   let app_name = concat!(env!("CARGO_PKG_NAME"), "-", env!("CARGO_PKG_VERSION")).to_string();

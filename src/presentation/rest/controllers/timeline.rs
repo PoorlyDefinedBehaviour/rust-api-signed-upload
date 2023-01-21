@@ -1,0 +1,82 @@
+use axum::extract::Query;
+use axum::{response::IntoResponse, Extension, Json};
+use hyper::StatusCode;
+use serde::Deserialize;
+use std::sync::Arc;
+use tracing::error;
+
+use crate::domain::constants::TIMELINE_LIMIT;
+use crate::domain::queries::timeline::get_timeline::Post;
+use crate::domain::{contracts::deps::Deps, queries, value_objects::cursor::Cursor};
+use crate::presentation::rest::extensions::context::ExtractContext;
+
+#[derive(Debug, Deserialize)]
+pub struct GetTimelineQuery {
+    cursor: i64,
+}
+
+#[tracing::instrument(name = "controllers::get_timeline", skip_all, fields(
+    payload = ?payload,
+    ctx = ?ctx
+))]
+pub async fn get_timeline(
+    Query(payload): Query<GetTimelineQuery>,
+    Extension(deps): Extension<Arc<Deps>>,
+    ExtractContext(ctx): ExtractContext,
+) -> Result<Json<Vec<Post>>, axum::response::Response> {
+    let cursor = Cursor {
+        offset: payload.cursor,
+        limit: TIMELINE_LIMIT,
+    };
+
+    match queries::timeline::get_timeline::handle(&deps, &ctx, cursor).await {
+        Ok(posts) => Ok(Json(posts)),
+        Err(error) => {
+            error!(?error, "unable to fetch timeline");
+
+            Err((StatusCode::INTERNAL_SERVER_ERROR, "Internal server error").into_response())
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::domain::constants::X_REQUEST_ID_HEADER_NAME;
+    use crate::infra::factory;
+    use crate::presentation::rest::{deps, router};
+    use axum::{body::Body, http::Request};
+    use tower::ServiceExt;
+
+    #[tokio::test]
+    async fn can_get_timeline() -> Result<(), Box<dyn std::error::Error>> {
+        dotenv::dotenv().ok();
+
+        let mut executor = deps()?.db.write().await?;
+
+        let user_id = factory::user::create(&mut executor).await?;
+
+        factory::post::create_for_user(user_id, &mut executor).await?;
+
+        // let posts = factory::post::create_many(1, &mut executor).await?;
+
+        let app = router();
+
+        let req = Request::builder()
+            .method("GET")
+            .uri("/v1/timeline?cursor=0")
+            .header("Content-Type", "application/json")
+            .header(X_REQUEST_ID_HEADER_NAME, 1)
+            .body(Body::empty())?;
+
+        let response = app.oneshot(req).await?;
+
+        assert!(response.status().is_success());
+        dbg!(hyper::body::to_bytes(response.into_body()).await);
+        // let content: Vec<Post> =
+        //     serde_json::from_slice(&hyper::body::to_bytes(response.into_body()).await?)?;
+
+        // assert_eq!(posts, content);
+
+        Ok(())
+    }
+}

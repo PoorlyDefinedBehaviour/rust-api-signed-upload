@@ -2,6 +2,7 @@ use std::{env::VarError, str::FromStr};
 
 use anyhow::{anyhow, Result};
 
+#[derive(Debug)]
 pub struct Config {
   pub database_ro_url: Option<String>,
   pub database_rw_url: Option<String>,

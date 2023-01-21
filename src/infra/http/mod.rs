@@ -3,6 +3,8 @@ use crate::domain::contracts::http;
 use async_trait::async_trait;
 use axum::http::HeaderMap;
 use reqwest::{Body, Client, RequestBuilder, Response};
+
+#[derive(Debug)]
 pub struct Http {
   client: Client,
 }

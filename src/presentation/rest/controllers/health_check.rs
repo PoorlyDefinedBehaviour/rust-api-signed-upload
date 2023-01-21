@@ -3,7 +3,7 @@ pub async fn handle() -> &'static str {
   "OK"
 }
 
-#[cfg(test)]  
+#[cfg(test)]
 mod tests {
   use axum::{
     body::Body,
@@ -26,4 +26,3 @@ mod tests {
     Ok(())
   }
 }
-
