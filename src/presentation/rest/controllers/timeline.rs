@@ -5,10 +5,10 @@ use std::sync::Arc;
 use tracing::error;
 
 use crate::domain::constants::TIMELINE_LIMIT;
-use crate::domain::queries::timeline::get_timeline::Post;
 use crate::domain::{contracts::deps::Deps, queries, value_objects::cursor::Cursor};
 use crate::presentation::rest::errors::error_into_response;
 use crate::presentation::rest::extensions::context::ExtractContext;
+use crate::presentation::rest::view_models;
 
 #[derive(Debug, Deserialize)]
 pub struct GetTimelineQuery {
@@ -23,14 +23,19 @@ pub async fn get_timeline(
     Query(payload): Query<GetTimelineQuery>,
     Extension(deps): Extension<Arc<Deps>>,
     ExtractContext(ctx): ExtractContext,
-) -> Result<Json<Vec<Post>>, axum::response::Response> {
+) -> Result<Json<Vec<view_models::timeline::PostOutput>>, axum::response::Response> {
     let cursor = Cursor {
         offset: payload.cursor,
         limit: TIMELINE_LIMIT,
     };
 
     match queries::timeline::get_timeline::handle(&deps, &ctx, cursor).await {
-        Ok(posts) => Ok(Json(posts)),
+        Ok(posts) => Ok(Json(
+            posts
+                .into_iter()
+                .map(view_models::timeline::PostOutput::from)
+                .collect(),
+        )),
         Err(error) => {
             error!(?error, "unable to fetch timeline");
 

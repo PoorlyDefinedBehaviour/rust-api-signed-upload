@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, PartialOrd)]
 pub struct Post {
     pub id: Uuid,
-    pub creator_id: Uuid,
+    pub creator_username: String,
     pub description: String,
     pub video_url: String,
     pub likes: i32,

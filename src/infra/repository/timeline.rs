@@ -29,14 +29,16 @@ impl contracts::repository::TimelineRepository for TimelineRepository {
     ) -> Result<Vec<Post>> {
         let rows = sqlx::query!(
             "SELECT 
+                users.username as user_username,
                 posts.id as post_id,
-                posts.creator_id as post_creator_id,
                 posts.description as post_description,
                 posts.video_url as post_video_url,
                 posts.likes as post_likes,
                 posts.paid as post_paid,
                 posts.created_at as post_created_at
             FROM posts 
+            INNER JOIN users
+            ON users.id = posts.creator_id
             ORDER BY posts.created_at DESC
             OFFSET $1 LIMIT $2;
             ",
@@ -66,7 +68,7 @@ impl TryFrom<PgRow> for Post {
 
                 Uuid::from_slice(id.as_bytes())?
             },
-            creator_id: row.try_get("post_creator_id")?,
+            creator_username: row.try_get("user_username")?,
             description: row.try_get("post_description")?,
             video_url: row.try_get("post_video_url")?,
             likes: row.try_get("post_likes")?,
