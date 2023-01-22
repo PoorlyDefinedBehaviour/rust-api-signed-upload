@@ -1,18 +1,16 @@
 use anyhow::Result;
 use axum::{response::IntoResponse, Extension, Json};
 use chrono::Utc;
-use fake::faker::internet::en::FreeEmail;
-use fake::{Dummy, Fake, Faker};
 use hyper::StatusCode;
-use rand::Rng;
 use std::sync::Arc;
 use tracing::error;
 
-use crate::domain::commands::user::create::CreateUserInput;
+use crate::domain::commands::user::CreateUserInput;
 use crate::domain::contracts::deps::Deps;
 use crate::domain::errors::ValidationError;
 use crate::domain::value_objects::{email::Email, password::Password};
 use crate::domain::{self, commands};
+use crate::presentation::rest::errors::error_into_response;
 use crate::presentation::rest::extensions::context::ExtractContext;
 use crate::presentation::rest::view_models;
 
@@ -35,17 +33,15 @@ pub async fn register(
     Extension(deps): Extension<Arc<Deps>>,
     ExtractContext(ctx): ExtractContext,
 ) -> Result<StatusCode, axum::response::Response> {
-    if let Err(error) = commands::user::create::run(&deps, &ctx, payload.try_into()?).await {
+    if let Err(error) = commands::user::create(&deps, &ctx, payload.try_into()?).await {
         error!(?error, "unable to create user");
-        return Err((StatusCode::INTERNAL_SERVER_ERROR, "Internal server error").into_response());
+        return Err(error_into_response(error));
     }
 
     Ok(StatusCode::CREATED)
 }
 
-impl TryFrom<view_models::register::RegisterInput>
-    for domain::commands::user::create::CreateUserInput
-{
+impl TryFrom<view_models::register::RegisterInput> for domain::commands::user::CreateUserInput {
     type Error = ValidationError;
 
     fn try_from(input: view_models::register::RegisterInput) -> Result<Self, Self::Error> {
@@ -58,28 +54,31 @@ impl TryFrom<view_models::register::RegisterInput>
     }
 }
 
-impl Dummy<Faker> for view_models::register::RegisterInput {
-    fn dummy_with_rng<R: Rng + ?Sized>(
-        _: &Faker,
-        _rng: &mut R,
-    ) -> view_models::register::RegisterInput {
-        view_models::register::RegisterInput {
-            username: Faker.fake(),
-            email: FreeEmail().fake(),
-            password: Faker.fake(),
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::domain::constants::X_REQUEST_ID_HEADER_NAME;
-    use axum::{body::Body, http::Request};
-    use fake::Fake;
+    use crate::{
+        domain::constants::X_REQUEST_ID_HEADER_NAME, presentation::rest::traits::RequestBuilderExt,
+    };
+    use axum::http::Request;
+    use fake::{faker::internet::en::FreeEmail, Dummy, Fake, Faker};
+    use rand::Rng;
     use tower::ServiceExt;
 
     use crate::presentation::rest::{deps, router};
+
+    impl Dummy<Faker> for view_models::register::RegisterInput {
+        fn dummy_with_rng<R: Rng + ?Sized>(
+            _: &Faker,
+            _rng: &mut R,
+        ) -> view_models::register::RegisterInput {
+            view_models::register::RegisterInput {
+                username: Faker.fake(),
+                email: FreeEmail().fake(),
+                password: Faker.fake(),
+            }
+        }
+    }
 
     #[tokio::test]
     async fn register() -> Result<(), Box<dyn std::error::Error>> {
@@ -95,9 +94,7 @@ mod tests {
             .header("Content-Type", "application/json")
             .header(X_REQUEST_ID_HEADER_NAME, 1)
             .extension(deps()?)
-            // serde_json::to_string(&user)?
-            // .json(&user)?;
-            .body(Body::from(serde_json::to_string(&user)?))?;
+            .json(&user)?;
 
         let response = app.oneshot(req).await?;
 

@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+pub mod pix_payment;
 pub mod register;
 
 #[derive(Debug, Deserialize, Serialize)]
