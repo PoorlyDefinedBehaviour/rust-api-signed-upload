@@ -11,7 +11,7 @@ impl Dummy<Faker> for Post {
             id: Uuid::new_v4(),
             description: Faker.fake(),
             likes: Faker.fake(),
-            creator_id: Uuid::new_v4(),
+            creator_username: Faker.fake(),
             video_url: Faker.fake(),
             paid: Faker.fake(),
             created_at: Utc::now(),
