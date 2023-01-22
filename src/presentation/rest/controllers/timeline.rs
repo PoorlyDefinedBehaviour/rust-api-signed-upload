@@ -45,7 +45,29 @@ mod tests {
     use crate::infra::factory;
     use crate::presentation::rest::{deps, router};
     use axum::{body::Body, http::Request};
+    use rand::Rng;
     use tower::ServiceExt;
+
+    #[tokio::test]
+    #[ignore]
+    async fn generate_post_test_data() -> Result<(), Box<dyn std::error::Error>> {
+        dotenv::dotenv().ok();
+
+        let mut executor = deps()?.db.write().await?;
+
+        // TODO: this is sequential, fix it.
+        for _ in 0..100 {
+            let user_id = factory::user::create(&mut executor).await?;
+
+            let num_posts = rand::thread_rng().gen_range(0..10);
+
+            for _ in 0..num_posts {
+                factory::post::create_for_user(user_id, &mut executor).await?;
+            }
+        }
+
+        Ok(())
+    }
 
     #[tokio::test]
     async fn can_get_timeline() -> Result<(), Box<dyn std::error::Error>> {

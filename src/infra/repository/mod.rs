@@ -7,7 +7,7 @@ use crate::{
     config,
     domain::contracts::{
         self,
-        repository::{Executor, ExecutorInner, Readable, Writable},
+        repository::{Executor, ExecutorInner},
     },
 };
 use anyhow::{Context, Result};
@@ -99,11 +99,11 @@ impl Database {
 
 #[async_trait]
 impl contracts::repository::Database for Database {
-    async fn read<'c>(&self) -> Result<Executor<'c, Readable>> {
+    async fn read<'c>(&self) -> Result<Executor<'c>> {
         Ok(Executor::new(ExecutorInner::Pool(self.ro_pool().await?)))
     }
 
-    async fn write<'c>(&self) -> Result<Executor<'c, Writable>> {
+    async fn write<'c>(&self) -> Result<Executor<'c>> {
         Ok(Executor::new(ExecutorInner::Pool(self.rw_pool().await?)))
     }
 }

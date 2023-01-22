@@ -1,4 +1,4 @@
-use crate::domain::contracts::repository::{Executor, SqlxExt, Writable};
+use crate::domain::contracts::repository::{Executor, SqlxExt};
 use crate::domain::queries::timeline::get_timeline::Post;
 use crate::infra::uuid::Uuid;
 use anyhow::Result;
@@ -20,10 +20,7 @@ impl Dummy<Faker> for Post {
 }
 
 #[allow(dead_code)]
-pub async fn create_for_user<'c>(
-    user_id: Uuid,
-    executor: &mut Executor<'c, Writable>,
-) -> Result<()> {
+pub async fn create_for_user<'c>(user_id: Uuid, executor: &mut Executor<'c>) -> Result<()> {
     sqlx::query!(
         "INSERT INTO posts (
             id,
@@ -49,7 +46,7 @@ pub async fn create_for_user<'c>(
 }
 
 #[allow(dead_code)]
-pub async fn refresh<'c>(executor: &mut Executor<'c, Writable>) -> Result<()> {
+pub async fn refresh<'c>(executor: &mut Executor<'c>) -> Result<()> {
     sqlx::query("DELETE FROM timeline")
         .execute_ex(executor)
         .await?;

@@ -6,7 +6,7 @@ use crate::{
     domain::{
         contracts::{
             self,
-            repository::{Executor, Readable, SqlxExt},
+            repository::{Executor, SqlxExt},
         },
         queries::timeline::get_timeline::Post,
         value_objects::cursor::Cursor,
@@ -24,7 +24,7 @@ impl contracts::repository::TimelineRepository for TimelineRepository {
     ))]
     async fn get_timeline<'c>(
         &self,
-        executor: &mut Executor<'c, Readable>,
+        executor: &mut Executor<'c>,
         cursor: Cursor,
     ) -> Result<Vec<Post>> {
         let rows = sqlx::query!(

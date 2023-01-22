@@ -4,7 +4,6 @@ use sqlx::postgres::{PgQueryResult, PgRow};
 use sqlx::query::{Map, Query};
 use sqlx::{Executor as SqlxExecutor, Pool, Postgres, Transaction};
 use std::fmt::Debug;
-use std::marker::PhantomData;
 use std::sync::Arc;
 
 use crate::domain::commands;
@@ -12,23 +11,24 @@ use crate::domain::queries::timeline::get_timeline::Post;
 use crate::domain::value_objects::cursor::Cursor;
 use crate::infra::uuid::Uuid;
 
-pub struct Executor<'c, S> {
+pub struct Executor<'c> {
     inner: ExecutorInner<'c>,
-    _p: PhantomData<S>,
 }
 
-impl<'c, S> Executor<'c, S> {
+impl<'c> Executor<'c> {
     pub fn new(inner: ExecutorInner<'c>) -> Self {
-        Self {
-            inner,
-            _p: PhantomData,
-        }
+        Self { inner }
     }
 }
 
-impl<'c> Executor<'c, Writable> {
+pub enum ExecutorInner<'c> {
+    Pool(Pool<Postgres>),
+    Transaction(Box<Transaction<'c, Postgres>>),
+}
+
+impl<'c> Executor<'c> {
     #[allow(unused)]
-    pub async fn transaction(self) -> Result<Executor<'c, Transactional>> {
+    pub async fn transaction(self) -> Result<Executor<'c>> {
         match self.inner {
             ExecutorInner::Transaction(_) => {
                 unreachable!("called transaction() twice, this is a bug")
@@ -41,56 +41,30 @@ impl<'c> Executor<'c, Writable> {
     }
 }
 
-impl<'c> From<Executor<'c, Writable>> for Executor<'c, Readable> {
-    fn from(input: Executor<'c, Writable>) -> Self {
-        Self::new(input.inner)
-    }
-}
-
-impl<'c> From<Executor<'c, Transactional>> for Executor<'c, Writable> {
-    fn from(input: Executor<'c, Transactional>) -> Self {
-        Self::new(input.inner)
-    }
-}
-
-pub enum Writable {}
-
-pub enum Readable {}
-
-pub enum Transactional {}
-
-pub enum ExecutorInner<'c> {
-    Pool(Pool<Postgres>),
-    Transaction(Box<Transaction<'c, Postgres>>),
-}
-
 #[async_trait]
-pub trait SqlxExt<S> {
-    async fn fetch_one_ex<'e>(self, executor: &mut Executor<'e, S>) -> Result<PgRow, sqlx::Error>;
+pub trait SqlxExt {
+    async fn fetch_one_ex<'e>(self, executor: &mut Executor<'e>) -> Result<PgRow, sqlx::Error>;
 
     async fn fetch_optional_ex<'e>(
         self,
-        executor: &mut Executor<'e, S>,
+        executor: &mut Executor<'e>,
     ) -> Result<Option<PgRow>, sqlx::Error>;
 
     async fn execute_ex<'e>(
         self,
-        executor: &mut Executor<'e, S>,
+        executor: &mut Executor<'e>,
     ) -> Result<PgQueryResult, sqlx::Error>;
 
-    async fn fetch_all_ex<'e>(
-        self,
-        executor: &mut Executor<'e, S>,
-    ) -> Result<Vec<PgRow>, sqlx::Error>;
+    async fn fetch_all_ex<'e>(self, executor: &mut Executor<'e>)
+        -> Result<Vec<PgRow>, sqlx::Error>;
 }
 
 #[async_trait]
-impl<'q, A, S> SqlxExt<S> for Query<'q, Postgres, A>
+impl<'q, A> SqlxExt for Query<'q, Postgres, A>
 where
-    S: Send,
     A: sqlx::IntoArguments<'q, Postgres> + 'q,
 {
-    async fn fetch_one_ex<'e>(self, executor: &mut Executor<'e, S>) -> Result<PgRow, sqlx::Error> {
+    async fn fetch_one_ex<'e>(self, executor: &mut Executor<'e>) -> Result<PgRow, sqlx::Error> {
         match &mut executor.inner {
             ExecutorInner::Pool(pool) => pool.fetch_one(self).await,
             ExecutorInner::Transaction(tx) => tx.fetch_one(self).await,
@@ -99,7 +73,7 @@ where
 
     async fn fetch_optional_ex<'e>(
         self,
-        executor: &mut Executor<'e, S>,
+        executor: &mut Executor<'e>,
     ) -> Result<Option<PgRow>, sqlx::Error> {
         match &mut executor.inner {
             ExecutorInner::Pool(pool) => pool.fetch_optional(self).await,
@@ -109,7 +83,7 @@ where
 
     async fn execute_ex<'e>(
         self,
-        executor: &mut Executor<'e, S>,
+        executor: &mut Executor<'e>,
     ) -> Result<PgQueryResult, sqlx::Error> {
         match &mut executor.inner {
             ExecutorInner::Pool(pool) => pool.execute(self).await,
@@ -119,7 +93,7 @@ where
 
     async fn fetch_all_ex<'e>(
         self,
-        executor: &mut Executor<'e, S>,
+        executor: &mut Executor<'e>,
     ) -> Result<Vec<PgRow>, sqlx::Error> {
         match &mut executor.inner {
             ExecutorInner::Pool(pool) => pool.fetch_all(self).await,
@@ -129,13 +103,12 @@ where
 }
 
 #[async_trait]
-impl<'q, A, S, F> SqlxExt<S> for Map<'q, Postgres, F, A>
+impl<'q, A, F> SqlxExt for Map<'q, Postgres, F, A>
 where
-    S: Send,
     F: Send + 'q,
     A: sqlx::IntoArguments<'q, Postgres> + 'q,
 {
-    async fn fetch_one_ex<'e>(self, executor: &mut Executor<'e, S>) -> Result<PgRow, sqlx::Error> {
+    async fn fetch_one_ex<'e>(self, executor: &mut Executor<'e>) -> Result<PgRow, sqlx::Error> {
         match &mut executor.inner {
             ExecutorInner::Pool(pool) => pool.fetch_one(self).await,
             ExecutorInner::Transaction(tx) => tx.fetch_one(self).await,
@@ -144,7 +117,7 @@ where
 
     async fn fetch_optional_ex<'e>(
         self,
-        executor: &mut Executor<'e, S>,
+        executor: &mut Executor<'e>,
     ) -> Result<Option<PgRow>, sqlx::Error> {
         match &mut executor.inner {
             ExecutorInner::Pool(pool) => pool.fetch_optional(self).await,
@@ -154,7 +127,7 @@ where
 
     async fn execute_ex<'e>(
         self,
-        executor: &mut Executor<'e, S>,
+        executor: &mut Executor<'e>,
     ) -> Result<PgQueryResult, sqlx::Error> {
         match &mut executor.inner {
             ExecutorInner::Pool(pool) => pool.execute(self).await,
@@ -164,7 +137,7 @@ where
 
     async fn fetch_all_ex<'e>(
         self,
-        executor: &mut Executor<'e, S>,
+        executor: &mut Executor<'e>,
     ) -> Result<Vec<PgRow>, sqlx::Error> {
         match &mut executor.inner {
             ExecutorInner::Pool(pool) => pool.fetch_all(self).await,
@@ -175,8 +148,8 @@ where
 
 #[async_trait]
 pub trait Database: Send + Sync + Debug {
-    async fn read<'c>(&self) -> Result<Executor<'c, Readable>>;
-    async fn write<'c>(&self) -> Result<Executor<'c, Writable>>;
+    async fn read<'c>(&self) -> Result<Executor<'c>>;
+    async fn write<'c>(&self) -> Result<Executor<'c>>;
 }
 
 #[derive(Debug)]
@@ -188,11 +161,11 @@ pub struct Repository {
 #[cfg_attr(test, mockall::automock)]
 #[async_trait]
 pub trait UserRepository: Send + Sync + Debug {
-    async fn get_by_id<'c>(&self, executor: &mut Executor<'c, Readable>, id: Uuid);
+    async fn get_by_id<'c>(&self, executor: &mut Executor<'c>, id: Uuid);
 
     async fn create<'c>(
         &self,
-        executor: &mut Executor<'c, Writable>,
+        executor: &mut Executor<'c>,
         input: commands::user::CreateUserInput,
     ) -> Result<()>;
 }
@@ -201,7 +174,7 @@ pub trait UserRepository: Send + Sync + Debug {
 pub trait TimelineRepository: Send + Sync + Debug {
     async fn get_timeline<'c>(
         &self,
-        executor: &mut Executor<'c, Readable>,
+        executor: &mut Executor<'c>,
         cursor: Cursor,
     ) -> Result<Vec<Post>>;
 }
