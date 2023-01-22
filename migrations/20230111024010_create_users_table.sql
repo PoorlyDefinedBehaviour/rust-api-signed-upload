@@ -18,3 +18,10 @@ CREATE TABLE IF NOT EXISTS user_tags (
     FOREIGN KEY(user_id) REFERENCES users(id)
     ON DELETE NO ACTION
 );
+
+CREATE TABLE IF NOT EXISTS user_followers (
+    follower_id uuid NOT NULL,
+    CONSTRAINT fk_follower_id
+    FOREIGN KEY(follower_id) REFERENCES users(id)
+    ON DELETE NO ACTION
+)
