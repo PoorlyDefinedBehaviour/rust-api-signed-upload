@@ -193,7 +193,7 @@ pub trait UserRepository: Send + Sync + Debug {
     async fn create<'c>(
         &self,
         executor: &mut Executor<'c, Writable>,
-        input: commands::user::create::CreateUserInput,
+        input: commands::user::CreateUserInput,
     ) -> Result<()>;
 }
 
