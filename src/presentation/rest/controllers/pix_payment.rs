@@ -22,7 +22,7 @@ pub async fn start_pix_payment(
         Ok(output) => Ok(Json(output.into())),
         Err(error) => {
             error!(?error, "unable to start pix payment");
-            dbg!(&error);
+
             Err(error_into_response(error))
         }
     }
