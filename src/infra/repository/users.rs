@@ -2,7 +2,7 @@ use crate::domain::{
     commands,
     contracts::{
         self,
-        repository::{Executor, Readable, SqlxExt, Writable},
+        repository::{Executor, SqlxExt},
     },
 };
 use crate::infra::uuid::Uuid;
@@ -16,7 +16,7 @@ pub struct UserRepository;
 #[async_trait]
 impl contracts::repository::UserRepository for UserRepository {
     #[tracing::instrument(name = "UserRepository.get_by_id", skip_all, fields(id = %id))]
-    async fn get_by_id<'c>(&self, executor: &mut Executor<'c, Readable>, id: Uuid) {
+    async fn get_by_id<'c>(&self, executor: &mut Executor<'c>, id: Uuid) {
         let _row = sqlx::query!("select * from users where id = $1", &id)
             .fetch_optional_ex(executor)
             .await;
@@ -24,7 +24,7 @@ impl contracts::repository::UserRepository for UserRepository {
 
     async fn create<'c>(
         &self,
-        executor: &mut Executor<'c, Writable>,
+        executor: &mut Executor<'c>,
         input: commands::user::CreateUserInput,
     ) -> Result<()> {
         sqlx::query!(
