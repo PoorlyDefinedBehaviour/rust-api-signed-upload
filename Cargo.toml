@@ -23,13 +23,11 @@ chrono = { version = "0.4.23", features = ["serde"] }
 bcrypt = "0.13.0"
 dotenv = "0.15.0"
 hyper = "0.14.23"
-fake = "2.5"
-rand = "0.8"
 serde = { version = "1.0.152", features = ["derive"] }
 axum-macros = "0.3.1"
 sqlx = { version = "0.6.2", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono"] }
 uuid = { version = "1.2.2", features = ["serde", "v4"] }
-qrcode = "0.12.0"
+qrcode = { version = "0.12.0", default-features = false }
 
 [dependencies.tower-http]
 version = "0.3.0"
@@ -41,3 +39,7 @@ version = "0.5.16"
 [dependencies.tokio]
 version = "1.21.1"
 features = ["rt-multi-thread", "macros"]
+
+[dev-dependencies]
+fake = "2.5"
+rand = "0.8"
