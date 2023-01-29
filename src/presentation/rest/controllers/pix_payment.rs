@@ -30,10 +30,12 @@ pub async fn start_pix_payment(
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+
     use crate::domain::constants::X_REQUEST_ID_HEADER_NAME;
     use crate::infra::uuid::Uuid;
     use crate::presentation::rest::traits::{RequestBuilderExt, ResponseExt};
-    use crate::presentation::rest::{router, view_models};
+    use crate::presentation::rest::{deps, router, view_models};
     use axum::http::Request;
     use hyper::Method;
     use tower::ServiceExt;
@@ -42,7 +44,9 @@ mod tests {
     async fn can_start_pix_payment() -> Result<(), Box<dyn std::error::Error>> {
         dotenv::dotenv().ok();
 
-        let app = router();
+        let deps = deps().await?;
+
+        let app = router().await?;
 
         let body = view_models::pix_payment::StartPixPaymentInput {
             creator_id: Uuid::new_v4(),
@@ -54,6 +58,7 @@ mod tests {
             .uri("/v1/payments/pix")
             .header("Content-Type", "application/json")
             .header(X_REQUEST_ID_HEADER_NAME, 1)
+            .extension(Arc::new(deps))
             .json(&body)?;
 
         let response = app.oneshot(req).await?;

@@ -1,11 +1,17 @@
 use std::sync::Arc;
 
-use super::{repository::{Database, Repository}};
-use super::http::Http;
+use crate::config::Config;
 
-#[derive(Debug)]
+use super::http::Http;
+use super::{
+    object_storage::ObjectStorage,
+    repository::{Database, Repository},
+};
+
 pub struct Deps {
-  pub db: Arc<dyn Database>,
-  pub repos: Repository,
-  pub http: Arc<dyn Http>
+    pub config: Arc<Config>,
+    pub db: Arc<dyn Database>,
+    pub repos: Repository,
+    pub http: Arc<dyn Http>,
+    pub object_storage: Arc<dyn ObjectStorage>,
 }

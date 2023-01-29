@@ -27,7 +27,10 @@ impl From<ValidationError> for axum::response::Response {
     }
 }
 
-#[tracing::instrument(name = "POST /v1/users")]
+#[tracing::instrument(name = "POST /v1/users", skip_all, fields(
+    payload = ?payload,
+    ctx = ?ctx
+))]
 pub async fn register(
     Json(payload): Json<view_models::register::RegisterInput>,
     Extension(deps): Extension<Arc<Deps>>,
@@ -84,7 +87,7 @@ mod tests {
     async fn register() -> Result<(), Box<dyn std::error::Error>> {
         dotenv::dotenv().ok();
 
-        let app = router();
+        let app = router().await?;
 
         let user: view_models::register::RegisterInput = Faker.fake();
 
@@ -93,7 +96,7 @@ mod tests {
             .uri("/v1/users")
             .header("Content-Type", "application/json")
             .header(X_REQUEST_ID_HEADER_NAME, 1)
-            .extension(deps()?)
+            .extension(Arc::new(deps().await?))
             .json(&user)?;
 
         let response = app.oneshot(req).await?;

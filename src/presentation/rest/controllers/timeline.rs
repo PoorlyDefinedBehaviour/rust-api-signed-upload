@@ -46,6 +46,8 @@ pub async fn get_timeline(
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+
     use crate::domain::constants::X_REQUEST_ID_HEADER_NAME;
     use crate::infra::factory;
     use crate::presentation::rest::{deps, router};
@@ -58,7 +60,7 @@ mod tests {
     async fn generate_post_test_data() -> Result<(), Box<dyn std::error::Error>> {
         dotenv::dotenv().ok();
 
-        let mut executor = deps()?.db.write().await?;
+        let mut executor = deps().await?.db.write().await?;
 
         // TODO: this is sequential, fix it.
         for _ in 0..100 {
@@ -78,7 +80,9 @@ mod tests {
     async fn can_get_timeline() -> Result<(), Box<dyn std::error::Error>> {
         dotenv::dotenv().ok();
 
-        let mut executor = deps()?.db.write().await?;
+        let deps = deps().await?;
+
+        let mut executor = deps.db.write().await?;
 
         let user_id = factory::user::create(&mut executor).await?;
 
@@ -86,13 +90,14 @@ mod tests {
 
         // let posts = factory::post::create_many(1, &mut executor).await?;
 
-        let app = router();
+        let app = router().await?;
 
         let req = Request::builder()
             .method("GET")
             .uri("/v1/timeline?cursor=0")
             .header("Content-Type", "application/json")
             .header(X_REQUEST_ID_HEADER_NAME, 1)
+            .extension(Arc::new(deps))
             .body(Body::empty())?;
 
         let response = app.oneshot(req).await?;
