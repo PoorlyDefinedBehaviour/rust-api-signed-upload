@@ -20,3 +20,12 @@ services:
       - "5433:80"
     depends_on:
       - db
+  localstack:
+    image: localstack/localstack
+    environment:
+      - SERVICES=s3
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - DEBUG=1
+    ports:
+      # localstack gateway, access localhost:4566/health to see services
+      - "4566:4566"

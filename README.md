@@ -7,14 +7,16 @@ Modify environment variables
 cp .env.example .env
 ```
 
-Run database
-```
-docker-compose up -d
-```
-
 [Install sqlx-cli](https://github.com/launchbadge/sqlx/blob/main/sqlx-cli/README.md#install)
 
-Run migrations
+[Install AWS cli](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+
+Run local development containers, run migrations, create localstack s3 buckets
 ```
-sqlx migrate run
+make dev
+```
+
+Run tests
+```
+cargo t
 ```
